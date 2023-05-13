@@ -46,15 +46,20 @@ inquirer.prompt([
                 break;
             case "Add A Department":
                 addDepartment();
+                break;
             case "Add A Role":
-
+                addRole();
+                break;
             case "Add An Employee":
 
             case "Update Employee Role":
         }
     })
+
 //Creating individual functions to prompt for what is to be added to the database to call in the case switch
+
 function addDepartment() {
+    //Getting the name of the new department and add it to the department table of the employee_tracker database
     inquirer.prompt([
         {
             name: "newDepartment",
@@ -64,9 +69,36 @@ function addDepartment() {
     ])
         .then(function (response) {
             var newDepartment = response.newDepartment;
-            var sql = "INSERT INTO department VALUES (" + newDepartment + ")";
+            var sql = "INSERT INTO department (department_name) VALUES (" + newDepartment + ")";
             con.query(sql, function (err, result) {
                 if (err) throw err;
+                console.log(newDepartment + "department added!");
             })
+        })
+}
+
+function addRole() {
+    inquirer.prompt([
+        {
+            name: "newRole",
+            message: "What is the name of the role you want to add?",
+            type: "input"
+        },
+        {
+            name: "roleSalary",
+            message: "What is the yearly salary of this new role?",
+            type: "number"
+        }
+    ])
+        .then(function (response) {
+            //Getting the name for the new role and the salary for the new role and adding it role table of the employee_tracker database
+            var newRole = response.newRole;
+            var newSalary = response.roleSalary;
+            var sql = "INSERT INTO role (department_name, salary) VALUES (" + newRole + "," + newSalary + ")";
+            con.query(sql, function (err, result) {
+                if (err) throw err;
+                console.log(newRole + "added with the salary of" + newSalary);
+            })
+
         })
 }
