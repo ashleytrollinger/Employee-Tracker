@@ -25,15 +25,27 @@ inquirer.prompt([
     .then(function (response) {
         var selectedChoice = response.action;
 
-        switch (seclectedChoice) {
+        switch (selectedChoice) {
             case "View All Departments":
-
+                db.query("SELECT * FROM department", function (err, result, fields) {
+                    if (err) throw err;
+                    console.table(result);
+                })
+                break;
             case "View All Roles":
-
+                db.query("SELECT * FROM role", function (err, result, fields) {
+                    if (err) throw err;
+                    console.table(result);
+                })
+                break;
             case "View All Employees":
-
+                db.query("SELECT * FROM employee", function (err, result, fields) {
+                    if (err) throw err;
+                    console.table(result);
+                })
+                break;
             case "Add A Department":
-
+                addDepartment();
             case "Add A Role":
 
             case "Add An Employee":
@@ -41,3 +53,4 @@ inquirer.prompt([
             case "Update Employee Role":
         }
     })
+
