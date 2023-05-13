@@ -53,4 +53,20 @@ inquirer.prompt([
             case "Update Employee Role":
         }
     })
-
+//Creating individual functions to prompt for what is to be added to the database to call in the case switch
+function addDepartment() {
+    inquirer.prompt([
+        {
+            name: "newDepartment",
+            message: "What is the name of the Department you want to add?",
+            type: "input"
+        }
+    ])
+        .then(function (response) {
+            var newDepartment = response.newDepartment;
+            var sql = "INSERT INTO department VALUES (" + newDepartment + ")";
+            con.query(sql, function (err, result) {
+                if (err) throw err;
+            })
+        })
+}
