@@ -55,6 +55,7 @@ inquirer.prompt([
                 newEmployee();
                 break;
             case "Update Employee Role":
+                updateEmployee();
         }
     })
 
@@ -149,12 +150,30 @@ function newEmployee() {
                 var employeeLast = response.lastName;
                 var employeeRole = response.employeeRole;
 
-                var sql = "INSERT INTO employee (first_name, last_name, role_ID) VALUES (" + employeeFirst + "," + employeeLast + "," + "," + employeeRole + ")";
-                db.query(sql, function (err, result) {
-                    if (err) throw err;
-                    console.log();
+                db.query("SELECT (first_name FROM employee", function (err, results, fields) {
+                    inquirer.prompt([
+                        {
+                            name: "employeeManager",
+                            message: "Who is this employees' manager (if they have one)?",
+                            type: "list",
+                            choices: [result]
+                        }
+                    ])
+                        .then(function (response1) {
+                            var employeeManager = response1.employeeManager;
+                            var sql = "INSERT INTO employee (first_name, last_name, role_ID, manager) VALUES (" + employeeFirst + "," + employeeLast + "," + employeeRole + "," + employeeManager + ")";
+                            db.query(sql, function (err, result) {
+                                if (err) throw err;
+                                console.log("Employee" + " " + employeeFirst + employeeLast + "in the" + " " + employeeRole + "department!");
+                            })
+                        })
                 })
+
 
             })
     })
+}
+
+function updateEmployee() {
+
 }

@@ -25,9 +25,9 @@ CREATE TABLE
         first_name VARCHAR(30) NOT NULL,
         last_name VARCHAR(30) NOT NULL,
         role_ID INT NOT NULL,
-        manager_ID INT,
+        manager VARCHAR(30),
         CONSTRAINT FK_role FOREIGN KEY (role_ID) REFERENCES role(ID),
-        CONSTRAINT FK_manager FOREIGN KEY (manager_ID) REFERENCES employee(ID)
+        CONSTRAINT FK_manager FOREIGN KEY (manager) REFERENCES employee(ID)
     );
 
-    SELECT * FROM role;
+SELECT * FROM role;
