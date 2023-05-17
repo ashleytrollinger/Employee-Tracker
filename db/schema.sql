@@ -8,8 +8,8 @@ USE employee_tracker;
 
 CREATE TABLE
     department (
-        ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        department_name VARCHAR(30) NOT NULL
+        ID INT NOT NULL AUTO_INCREMENT ,
+        department_name VARCHAR(30) NOT NULL PRIMARY KEY
     );
 
 CREATE TABLE
@@ -18,7 +18,7 @@ CREATE TABLE
         title VARCHAR(30) NOT NULL,
         salary DECIMAL NOT NULL,
         department_ID VARCHAR(30) NOT NULL,
-        CONSTRAINT FK_department FOREIGN KEY (department_ID) REFERENCES department(ID)
+        CONSTRAINT FK_department FOREIGN KEY (department_ID) REFERENCES department(department_name)
     );
 
 CREATE TABLE
