@@ -1,3 +1,5 @@
+-- Active: 1682537155486@@127.0.0.1@3306@employee_tracker
+
 DROP DATABASE IF EXISTS employee_tracker;
 
 CREATE DATABASE employee_tracker;
@@ -15,7 +17,7 @@ CREATE TABLE
         ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(30) NOT NULL,
         salary DECIMAL NOT NULL,
-        department_ID INT NOT NULL,
+        department_ID VARCHAR(30) NOT NULL,
         CONSTRAINT FK_department FOREIGN KEY (department_ID) REFERENCES department(ID)
     );
 
