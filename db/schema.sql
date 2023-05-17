@@ -14,8 +14,8 @@ CREATE TABLE
 
 CREATE TABLE
     role (
-        ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(30) NOT NULL,
+        ID INT NOT NULL AUTO_INCREMENT ,
+        title VARCHAR(30) NOT NULL PRIMARY KEY,
         salary DECIMAL NOT NULL,
         department_ID VARCHAR(30) NOT NULL,
         CONSTRAINT FK_department FOREIGN KEY (department_ID) REFERENCES department(department_name)
@@ -23,13 +23,13 @@ CREATE TABLE
 
 CREATE TABLE
     employee (
-        ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        first_name VARCHAR(30) NOT NULL,
+        ID INT NOT NULL AUTO_INCREMENT,
+        first_name VARCHAR(30) NOT NULL PRIMARY KEY,
         last_name VARCHAR(30) NOT NULL,
-        role_ID INT NOT NULL,
+        role_ID VARCHAR(30) NOT NULL,
         manager VARCHAR(30),
-        CONSTRAINT FK_role FOREIGN KEY (role_ID) REFERENCES role(ID),
-        CONSTRAINT FK_manager FOREIGN KEY (manager) REFERENCES employee(ID)
+        CONSTRAINT FK_role FOREIGN KEY (role_ID) REFERENCES role(title),
+        CONSTRAINT FK_manager FOREIGN KEY (manager) REFERENCES employee(first_name)
     );
 
 SELECT * FROM role;
