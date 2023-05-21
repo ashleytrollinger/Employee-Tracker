@@ -12,53 +12,56 @@ const db = process.env.JAWSDB_URL || mysql.createConnection(
         database: 'employee_tracker'
     }
 );
-
-
-// Using Inquirer to prompt
-inquirer.prompt([
-    {
-        name: "action",
-        message: "What would you like to do today?",
-        type: "list",
-        choices: ["View All Departments", "View All Roles", "View All Employees", "Add A Department", "Add A Role", "Add An Employee", "Update Employee Role"]
-    }
-])
-    .then(function (response) {
-        var selectedChoice = response.action;
-
-        switch (selectedChoice) {
-            case "View All Departments":
-                db.query("SELECT * FROM department", function (err, result, fields) {
-                    if (err) throw err;
-                    console.table(result);
-                })
-                break;
-            case "View All Roles":
-                db.query("SELECT * FROM role", function (err, result, fields) {
-                    if (err) throw err;
-                    console.table(result);
-                })
-                break;
-            case "View All Employees":
-                db.query("SELECT * FROM employee", function (err, result, fields) {
-                    if (err) throw err;
-                    console.table(result);
-                })
-                break;
-            case "Add A Department":
-                addDepartment();
-                break;
-            case "Add A Role":
-                addRole();
-                break;
-            case "Add An Employee":
-                newEmployee();
-                break;
-            case "Update Employee Role":
-                updateEmployee();
+prompt();
+function prompt() {
+    // Using Inquirer to prompt
+    inquirer.prompt([
+        {
+            name: "action",
+            message: "What would you like to do today?",
+            type: "list",
+            choices: ["View All Departments", "View All Roles", "View All Employees", "Add A Department", "Add A Role", "Add An Employee", "Update Employee Role"]
         }
-    })
+    ])
+        .then(function (response) {
+            var selectedChoice = response.action;
 
+            switch (selectedChoice) {
+                case "View All Departments":
+                    db.query("SELECT * FROM department", function (err, result, fields) {
+                        if (err) throw err;
+                        console.table(result);
+                        prompt();
+                    })
+                    break;
+                case "View All Roles":
+                    db.query("SELECT * FROM role", function (err, result, fields) {
+                        if (err) throw err;
+                        console.table(result);
+                        prompt();
+                    })
+                    break;
+                case "View All Employees":
+                    db.query("SELECT * FROM employee", function (err, result, fields) {
+                        if (err) throw err;
+                        console.table(result);
+                        prompt();
+                    })
+                    break;
+                case "Add A Department":
+                    addDepartment();
+                    break;
+                case "Add A Role":
+                    addRole();
+                    break;
+                case "Add An Employee":
+                    newEmployee();
+                    break;
+                case "Update Employee Role":
+                    updateEmployee();
+            }
+        })
+};
 //Creating individual functions to prompt for what is to be added to the database to call in the case switch
 
 function addDepartment() {
@@ -72,10 +75,11 @@ function addDepartment() {
     ])
         .then(function (response) {
             var newDepartment = response.newDepartment;
-            var sql = "INSERT INTO department (department_name) VALUES (" + newDepartment + ")";
+            var sql = "INSERT INTO department (department_name) VALUES ('" + newDepartment + "')";
             db.query(sql, function (err, result) {
                 if (err) throw err;
                 console.log(newDepartment + "department added!");
+                prompt();
             })
         })
 }
@@ -116,6 +120,7 @@ function addRole() {
                 db.query(sql, function (err, result) {
                     if (err) throw err;
                     console.log(newRole + "added with the salary of" + newSalary + "into the" + roleDepartment + "Department!");
+                    prompt();
                 })
 
             })
@@ -125,7 +130,7 @@ function addRole() {
 function newEmployee() {
     db.query("SELECT * FROM role", function (err, result, fields) {
         if (err) throw err;
-
+        const roleChoices = result.map(role => role)
         inquirer.prompt([
             {
                 name: "firstName",
@@ -165,6 +170,7 @@ function newEmployee() {
                             db.query(sql, function (err, result) {
                                 if (err) throw err;
                                 console.log("Employee" + " " + employeeFirst + employeeLast + "in the" + " " + employeeRole + "department!");
+                                prompt();
                             })
                         })
                 })

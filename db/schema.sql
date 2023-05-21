@@ -6,30 +6,32 @@ CREATE DATABASE employee_tracker;
 
 USE employee_tracker;
 
-CREATE TABLE
-    department (
-        ID INT NOT NULL AUTO_INCREMENT ,
-        department_name VARCHAR(30) NOT NULL PRIMARY KEY
-    );
+CREATE TABLE department (
+    ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    department_name VARCHAR(30) NOT NULL
+);
 
-CREATE TABLE
-    role (
-        ID INT NOT NULL AUTO_INCREMENT ,
-        title VARCHAR(30) NOT NULL PRIMARY KEY,
-        salary DECIMAL NOT NULL,
-        department_ID VARCHAR(30) NOT NULL,
-        CONSTRAINT FK_department FOREIGN KEY (department_ID) REFERENCES department(department_name)
-    );
+CREATE TABLE role (
+    ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(30) NOT NULL,
+    salary DECIMAL NOT NULL,
+    department_ID INT NOT NULL,
+    CONSTRAINT FK_department FOREIGN KEY (department_ID) REFERENCES department(ID)
+);
 
-CREATE TABLE
-    employee (
-        ID INT NOT NULL AUTO_INCREMENT,
-        first_name VARCHAR(30) NOT NULL PRIMARY KEY,
-        last_name VARCHAR(30) NOT NULL,
-        role_ID VARCHAR(30) NOT NULL,
-        manager VARCHAR(30),
-        CONSTRAINT FK_role FOREIGN KEY (role_ID) REFERENCES role(title),
-        CONSTRAINT FK_manager FOREIGN KEY (manager) REFERENCES employee(first_name)
-    );
+CREATE TABLE employee (
+    ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(30) NOT NULL,
+    last_name VARCHAR(30) NOT NULL,
+    role_ID INT NOT NULL,
+    manager INT,
+    CONSTRAINT FK_role FOREIGN KEY (role_ID) REFERENCES role(ID),
+    CONSTRAINT FK_manager FOREIGN KEY (manager) REFERENCES employee(ID)
+);
 
-SELECT * FROM role;
+-- Joins for the tables
+
+SELECT employee.ID, employee.first_name, employee.last_name, role.title, department.department_name
+FROM employee
+JOIN role ON employee.role_ID = role.ID
+JOIN department ON role.department_ID = department.ID;
