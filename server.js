@@ -1,5 +1,6 @@
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
+const { default: ExpandPrompt } = require('inquirer/lib/prompts/expand');
 require("dotenv").config()
 // Connect to database
 const db = process.env.JAWSDB_URL || mysql.createConnection(
@@ -58,7 +59,7 @@ function prompt() {
                     newEmployee();
                     break;
                 case "Update Employee Role":
-                    updateEmployee();
+                    updateEmployeeRole();
             }
         })
 };
@@ -88,7 +89,7 @@ function addRole() {
     //Getting the list of current departments to use as the choices for the third question
     db.query("SELECT (department_name) FROM department", function (err, result, fields) {
         if (err) throw err;
-
+        const availableDepartments = results.map(department => department.department_name);
         inquirer.prompt([
             {
                 name: "newRole",
@@ -104,22 +105,21 @@ function addRole() {
                 name: "roleDepartment",
                 message: "What department does this new role belong to?",
                 type: "list",
-                choices: [availableDepartments]
+                choices: availableDepartments
             }
         ])
             .then(function (response) {
                 //Getting the name for the new role and the salary for the new role and adding it role table of the employee_tracker database
                 var newRole = response.newRole;
                 var newSalary = response.roleSalary;
-                var roleDepartment = response.roleDepartment
-                var sql = "INSERT INTO role (title, salary, department_ID) VALUES (" + newRole + "," + newSalary + "," + roleDepartment
-
+                var roleDepartment = response.roleDepartment;
+                var sql = `INSERT INTO role (title, salary, department_ID) VALUES ('${newRole}', ${newSalary}, (SELECT ID FROM department WHERE department_name = '${roleDepartment}'))`;
 
 
 
                 db.query(sql, function (err, result) {
                     if (err) throw err;
-                    console.log(newRole + "added with the salary of" + newSalary + "into the" + roleDepartment + "Department!");
+                    console.log(`${newRole} added with a salary of ${newSalary} into the ${roleDepartment} department!`);
                     prompt();
                 })
 
@@ -130,7 +130,7 @@ function addRole() {
 function newEmployee() {
     db.query("SELECT * FROM role", function (err, result, fields) {
         if (err) throw err;
-        const roleChoices = result.map(role => role)
+        const roleChoices = result.map(role => role.title);
         inquirer.prompt([
             {
                 name: "firstName",
@@ -146,7 +146,7 @@ function newEmployee() {
                 name: "employeeRole",
                 message: "What role is this employee filling?",
                 type: "list",
-                choices: [result]
+                choices: roleChoices
             }
         ])
             .then(function (response) {
@@ -155,13 +155,13 @@ function newEmployee() {
                 var employeeLast = response.lastName;
                 var employeeRole = response.employeeRole;
 
-                db.query("SELECT (first_name FROM employee", function (err, results, fields) {
+                db.query("SELECT * FROM employee", function (err, results, fields) {
                     inquirer.prompt([
                         {
                             name: "employeeManager",
                             message: "Who is this employees' manager (if they have one)?",
                             type: "list",
-                            choices: [result]
+                            choices: results.map(employee => employee.first_name)
                         }
                     ])
                         .then(function (response1) {
@@ -169,7 +169,7 @@ function newEmployee() {
                             var sql = "INSERT INTO employee (first_name, last_name, role_ID, manager) VALUES (" + employeeFirst + "," + employeeLast + "," + employeeRole + "," + employeeManager + ")";
                             db.query(sql, function (err, result) {
                                 if (err) throw err;
-                                console.log("Employee" + " " + employeeFirst + employeeLast + "in the" + " " + employeeRole + "department!");
+                                console.log(`Employee ${employeeFirst} ${employeeLast} in the role ID ${employeeRole} added successfully!`);
                                 prompt();
                             })
                         })
@@ -180,6 +180,43 @@ function newEmployee() {
     })
 }
 
-function updateEmployee() {
+function updateEmployeeRole() {
+    // Getting the list of current employees to use as the choices for the first question
+    db.query("SELECT * FROM employee", function (err, result, fields) {
+        if (err) throw err;
 
+        const employeeChoices = result.map(employee => {
+            return {
+                name: `${employee.first_name} ${employee.last_name}`,
+                value: employee.ID
+            };
+        });
+
+        inquirer.prompt([
+            {
+                name: "employeeID",
+                message: "Select the employee you want to update:",
+                type: "list",
+                choices: employeeChoices
+            },
+            {
+                name: "newRole",
+                message: "Enter the new role for the employee:",
+                type: "input"
+            }
+        ])
+            .then(function (response) {
+                // Getting the selected employee ID and the new role from the user's response
+                var employeeID = response.employeeID;
+                var newRole = response.newRole;
+
+                var sql = `UPDATE employee SET role_name = '${newRole}' WHERE ID = ${employeeID}`;
+
+                db.query(sql, function (err, result) {
+                    if (err) throw err;
+                    console.log(`Successfully updated the role of employee with ID ${employeeID} to "${newRole}"`);
+                    prompt();
+                });
+            });
+    });
 }
