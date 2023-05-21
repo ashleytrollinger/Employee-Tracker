@@ -7,3 +7,4 @@ mySql, inquirer, javaScript
 
 ## Link
 https://github.com/ashleytrollinger/Employee-Tracker
+https://drive.google.com/file/d/1pc_eqt17By5QzHkv0dhxB3h9ke4Et9X2/view
