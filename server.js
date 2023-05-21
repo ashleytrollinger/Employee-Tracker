@@ -86,6 +86,48 @@ function addDepartment() {
         })
 }
 
+function addRole() {
+    db.query("SELECT * FROM department", function (err, result, fields) {
+        if (err) throw err;
+        const departmentChoices = result.map(department => department.department_name);
+
+        inquirer.prompt([
+            {
+                name: "newRole",
+                message: "What is the title of the role you want to add?",
+                type: "input"
+            },
+            {
+                name: "newSalary",
+                message: "What is the salary for this role?",
+                type: "input"
+            },
+            {
+                name: "department",
+                message: "Which department does this role belong to?",
+                type: "list",
+                choices: departmentChoices
+            }
+        ])
+            .then(function (response) {
+                const newRole = response.newRole;
+                const newSalary = response.newSalary;
+                const selectedDepartment = result.find(department => department.department_name === response.department);
+                const departmentID = selectedDepartment.ID;
+
+                const sql = "INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)";
+                const values = [newRole, newSalary, departmentID];
+
+                db.query(sql, values, function (err, result) {
+                    if (err) throw err;
+                    console.log(`Role ${newRole} added successfully!`);
+                    prompt();
+                });
+            });
+    });
+}
+
+
 function newEmployee() {
     db.query("SELECT * FROM role", function (err, result, fields) {
         if (err) throw err;
