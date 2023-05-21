@@ -36,19 +36,21 @@ function prompt() {
                     })
                     break;
                 case "View All Roles":
-                    db.query("SELECT * FROM role", function (err, result, fields) {
+                    db.query("SELECT role.*, employee.first_name, employee.last_name FROM role JOIN employee ON role.employee_id = employee.id", function (err, result, fields) {
                         if (err) throw err;
                         console.table(result);
                         prompt();
-                    })
+                    });
                     break;
+
                 case "View All Employees":
-                    db.query("SELECT * FROM employee", function (err, result, fields) {
+                    db.query("SELECT employee.*, role.title FROM employee JOIN role ON employee.role_id = role.id", function (err, result, fields) {
                         if (err) throw err;
                         console.table(result);
                         prompt();
-                    })
+                    });
                     break;
+
                 case "Add A Department":
                     addDepartment();
                     break;
@@ -150,7 +152,7 @@ function newEmployee() {
             }
         ])
             .then(function (response) {
-                //Getting the name for the new role and the salary for the new role and adding it role table of the employee_tracker database
+                // Getting the name for the new role and the salary for the new role and adding it to the role table of the employee_tracker database
                 var employeeFirst = response.firstName;
                 var employeeLast = response.lastName;
                 var employeeRole = response.employeeRole;
@@ -159,30 +161,36 @@ function newEmployee() {
                     inquirer.prompt([
                         {
                             name: "employeeManager",
-                            message: "Who is this employees' manager (if they have one)?",
+                            message: "Who is this employee's manager (if they have one)?",
                             type: "list",
                             choices: results.map(employee => employee.first_name)
                         }
                     ])
                         .then(function (response1) {
                             var employeeManager = response1.employeeManager;
-                            var sql = "INSERT INTO employee (first_name, last_name, role_ID, manager) VALUES (" + employeeFirst + "," + employeeLast + "," + employeeRole + "," + employeeManager + ")";
+                            // Retrieve the role ID based on the selected role title
+                            const selectedRole = result.find(role => role.title === employeeRole);
+                            var roleID = selectedRole.ID;
+
+                            var sql = `INSERT INTO employee (first_name, last_name, role_ID, manager) VALUES ('${employeeFirst}', '${employeeLast}', ${roleID}, '${employeeManager}')`;
+
                             db.query(sql, function (err, result) {
                                 if (err) throw err;
-                                console.log(`Employee ${employeeFirst} ${employeeLast} in the role ID ${employeeRole} added successfully!`);
+                                console.log(`Employee ${employeeFirst} ${employeeLast} in the role ${employeeRole} added successfully!`);
                                 prompt();
-                            })
-                        })
-                })
-
-
-            })
-    })
+                            });
+                        });
+                });
+            });
+    });
 }
 
 function updateEmployeeRole() {
     // Getting the list of current employees to use as the choices for the first question
-    db.query("SELECT * FROM employee", function (err, result, fields) {
+    const sql = `SELECT employee.ID, employee.first_name, employee.last_name, role.title
+            FROM employee
+            INNER JOIN role ON employee.role_ID = role.ID`;
+    db.query(sql, function (err, result, fields) {
         if (err) throw err;
 
         const employeeChoices = result.map(employee => {
@@ -220,3 +228,4 @@ function updateEmployeeRole() {
             });
     });
 }
+
