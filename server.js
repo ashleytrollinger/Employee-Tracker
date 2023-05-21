@@ -43,7 +43,7 @@ function prompt() {
                     });
                     break;
                 case "View All Employees":
-                    db.query("SELECT employee.first_name, employee.last_name, role.title AS role, manager.manager_name AS manager FROM employee JOIN role ON employee.role_id = role.id JOIN manager ON employee.manager_id = manager.id", function (err, result, fields) {
+                    db.query("SELECT employee.first_name, employee.last_name, role.title AS role, CONCAT(m.first_name, ' ', m.last_name) AS manager FROM employee employee LEFT JOIN role role ON employee.role_id = role.id LEFT JOIN employee m ON employee.manager = m.id", function (err, result, fields) {
                         if (err) throw err;
                         console.table(result);
                         prompt();
@@ -86,103 +86,62 @@ function addDepartment() {
         })
 }
 
-function addRole() {
-    //Getting the list of current departments to use as the choices for the third question
-    db.query("SELECT (department_name) FROM department", function (err, result, fields) {
-        if (err) throw err;
-        const availableDepartments = results.map(department => department.department_name);
-        inquirer.prompt([
-            {
-                name: "newRole",
-                message: "What is the name of the role you want to add?",
-                type: "input"
-            },
-            {
-                name: "roleSalary",
-                message: "What is the yearly salary of this new role?",
-                type: "number"
-            },
-            {
-                name: "roleDepartment",
-                message: "What department does this new role belong to?",
-                type: "list",
-                choices: availableDepartments
-            }
-        ])
-            .then(function (response) {
-                //Getting the name for the new role and the salary for the new role and adding it role table of the employee_tracker database
-                var newRole = response.newRole;
-                var newSalary = response.roleSalary;
-                var roleDepartment = response.roleDepartment;
-                var sql = `INSERT INTO role (title, salary, department_ID) VALUES ('${newRole}', ${newSalary}, (SELECT ID FROM department WHERE department_name = '${roleDepartment}'))`;
-
-
-
-                db.query(sql, function (err, result) {
-                    if (err) throw err;
-                    console.log(`${newRole} added with a salary of ${newSalary} into the ${roleDepartment} department!`);
-                    prompt();
-                })
-
-            })
-    })
-}
-
 function newEmployee() {
     db.query("SELECT * FROM role", function (err, result, fields) {
         if (err) throw err;
         const roleChoices = result.map(role => role.title);
-        inquirer.prompt([
-            {
-                name: "firstName",
-                message: "What is the first name of the employee you want to add?",
-                type: "input"
-            },
-            {
-                name: "lastName",
-                message: "What is the last name of the employee you want to add?",
-                type: "input"
-            },
-            {
-                name: "employeeRole",
-                message: "What role is this employee filling?",
-                type: "list",
-                choices: roleChoices
-            }
-        ])
-            .then(function (response) {
-                // Getting the name for the new role and the salary for the new role and adding it to the role table of the employee_tracker database
-                var employeeFirst = response.firstName;
-                var employeeLast = response.lastName;
-                var employeeRole = response.employeeRole;
+        db.query("SELECT * FROM employee", function (err, results, fields) {
+            inquirer.prompt([
+                {
+                    name: "firstName",
+                    message: "What is the first name of the employee you want to add?",
+                    type: "input"
+                },
+                {
+                    name: "lastName",
+                    message: "What is the last name of the employee you want to add?",
+                    type: "input"
+                },
+                {
+                    name: "employeeRole",
+                    message: "What role is this employee filling?",
+                    type: "list",
+                    choices: roleChoices
+                },
+                {
+                    name: "employeeManager",
+                    message: "Who is this employee's manager (if they have one)?",
+                    type: "list",
+                    choices: function () {
+                        const managerChoices = results.map(employee => employee.first_name);
+                        managerChoices.unshift("No Manager");
+                        return managerChoices;
+                    }
+                }
+            ])
+                .then(function (response) {
+                    const employeeFirst = response.firstName;
+                    const employeeLast = response.lastName;
+                    const employeeRole = response.employeeRole;
+                    const employeeManager = response.employeeManager === "No Manager" ? null : response.employeeManager;
 
-                db.query("SELECT * FROM employee", function (err, results, fields) {
-                    inquirer.prompt([
-                        {
-                            name: "employeeManager",
-                            message: "Who is this employee's manager (if they have one)?",
-                            type: "list",
-                            choices: results.map(employee => employee.first_name)
-                        }
-                    ])
-                        .then(function (response1) {
-                            var employeeManager = response1.employeeManager;
-                            // Retrieve the role ID based on the selected role title
-                            const selectedRole = result.find(role => role.title === employeeRole);
-                            var roleID = selectedRole.ID;
+                    const selectedRole = result.find(role => role.title === employeeRole);
+                    const roleID = selectedRole.ID;
 
-                            var sql = `INSERT INTO employee (first_name, last_name, role_ID, manager) VALUES ('${employeeFirst}', '${employeeLast}', ${roleID}, '${employeeManager}')`;
+                    const sql = `INSERT INTO employee (first_name, last_name, role_ID, manager) VALUES (?, ?, ?, ?)`;
+                    const values = [employeeFirst, employeeLast, roleID, employeeManager];
 
-                            db.query(sql, function (err, result) {
-                                if (err) throw err;
-                                console.log(`Employee ${employeeFirst} ${employeeLast} in the role ${employeeRole} added successfully!`);
-                                prompt();
-                            });
-                        });
+                    db.query(sql, values, function (err, result) {
+                        if (err) throw err;
+                        console.log(`Employee ${employeeFirst} ${employeeLast} in the role ${employeeRole} added successfully!`);
+                        prompt();
+                    });
                 });
-            });
+        });
     });
 }
+
+
 
 function updateEmployeeRole() {
     // Getting the list of current employees to use as the choices for the first question
@@ -199,32 +158,45 @@ function updateEmployeeRole() {
             };
         });
 
-        inquirer.prompt([
-            {
-                name: "employeeID",
-                message: "Select the employee you want to update:",
-                type: "list",
-                choices: employeeChoices
-            },
-            {
-                name: "newRole",
-                message: "Enter the new role for the employee:",
-                type: "input"
-            }
-        ])
-            .then(function (response) {
-                // Getting the selected employee ID and the new role from the user's response
-                var employeeID = response.employeeID;
-                var newRole = response.newRole;
+        // Fetching the list of existing roles for the role choices
+        const roleSql = "SELECT * FROM role";
+        db.query(roleSql, function (err, roleResult) {
+            if (err) throw err;
 
-                var sql = `UPDATE employee SET role_name = '${newRole}' WHERE ID = ${employeeID}`;
-
-                db.query(sql, function (err, result) {
-                    if (err) throw err;
-                    console.log(`Successfully updated the role of employee with ID ${employeeID} to "${newRole}"`);
-                    prompt();
-                });
+            const roleChoices = roleResult.map(role => {
+                return {
+                    name: role.title,
+                    value: role.ID
+                };
             });
+
+            inquirer.prompt([
+                {
+                    name: "employeeID",
+                    message: "Select the employee you want to update:",
+                    type: "list",
+                    choices: employeeChoices
+                },
+                {
+                    name: "newRole",
+                    message: "Select the new role for the employee:",
+                    type: "list",
+                    choices: roleChoices
+                }
+            ])
+                .then(function (response) {
+                    // Getting the selected employee ID and the new role from the user's response
+                    var employeeID = response.employeeID;
+                    var newRoleID = response.newRole;
+
+                    var sql = `UPDATE employee SET role_ID = ${newRoleID} WHERE ID = ${employeeID}`;
+
+                    db.query(sql, function (err, result) {
+                        if (err) throw err;
+                        console.log(`Successfully updated the role of employee with ID ${employeeID}`);
+                        prompt();
+                    });
+                });
+        });
     });
 }
-
