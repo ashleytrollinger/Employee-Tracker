@@ -36,15 +36,14 @@ function prompt() {
                     })
                     break;
                 case "View All Roles":
-                    db.query("SELECT role.*, employee.first_name, employee.last_name FROM role JOIN employee ON role.employee_id = employee.id", function (err, result, fields) {
+                    db.query("SELECT role.title, role.salary, department.department_name AS department FROM role JOIN department ON role.department_id = department.id", function (err, result, fields) {
                         if (err) throw err;
                         console.table(result);
                         prompt();
                     });
                     break;
-
                 case "View All Employees":
-                    db.query("SELECT employee.*, role.title FROM employee JOIN role ON employee.role_id = role.id", function (err, result, fields) {
+                    db.query("SELECT employee.first_name, employee.last_name, role.title AS role, manager.manager_name AS manager FROM employee JOIN role ON employee.role_id = role.id JOIN manager ON employee.manager_id = manager.id", function (err, result, fields) {
                         if (err) throw err;
                         console.table(result);
                         prompt();
